@@ -2,9 +2,17 @@ package com.vartyr.distort_client;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
         Retrofit retrofit;
         APIService apiService;
         EndpointConfigs configs;
+        String tempProvisionText;
 
 
     @Override
@@ -48,28 +57,63 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public String utility_fetchPinFromInput(){
+        EditText editText = findViewById(R.id.provisioningPinField);
+        return editText.getText().toString();
+    }
+
+    public void utility_setTextToPassword(String s){
+        TextView tv = findViewById(R.id.provisionPasswordText);
+        tv.setText(s);
+    }
+
+    public void utility_clearTextToPassword(){
+        TextView tv = findViewById(R.id.provisionPasswordText);
+        tv.setText("");
+    }
+
 
     public void getUpdate(View view){
 
-        Call call = apiService.getDistortSession("1234");
 
-        call.enqueue(new Callback() {
-            @Override
-            public void onResponse(Call call, Response response) {
-                Log.d("API", "onResponse");
-                if (response.body() != null){
-                    Log.d("API", "Response string: "+((DistortSessionModel) response.body()).broadcastText);
+        if (utility_fetchPinFromInput() != "") {
+
+            Call call = apiService.getDistortSession(utility_fetchPinFromInput());
+
+            call.enqueue(new Callback() {
+                @Override
+                public void onResponse(Call call, Response response) {
+                    Log.d("API", "onResponse");
+                    if (response.body() != null) {
+                        Log.d("API", "Response acquired: ");
+                        tempProvisionText = ((DistortSessionModel) response.body()).broadcastText;
+                        utility_setTextToPassword(tempProvisionText);
+                    }
+
 
                 }
 
+                @Override
+                public void onFailure(Call call, Throwable t) {
+                    Log.d("API", "onFailure with: " + t.getLocalizedMessage());
+                }
+            });
 
-            }
+        }
+    }
 
-            @Override
-            public void onFailure(Call call, Throwable t) {
-                Log.d("API", "onFailure with: " + t.getLocalizedMessage());
-            }
-        });
+
+
+    public void addToClipboardAndOpenWifi(View view) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("provision", tempProvisionText);
+        clipboard.setPrimaryClip(clip);
+        Toast.makeText(this,"Added provision text to clipboard: " + tempProvisionText,Toast.LENGTH_SHORT);
+        utility_clearTextToPassword();
+
+        startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+
+
     }
 
 
