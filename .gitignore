@@ -1,3 +1,5 @@
+*EndpointConfigs.java
+
 *.iml
 .gradle
 /local.properties
