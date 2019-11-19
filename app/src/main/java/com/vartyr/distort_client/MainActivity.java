@@ -57,17 +57,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public String utility_fetchPinFromInput(){
-        EditText editText = findViewById(R.id.provisioningPinField);
+    public String utility_fetchSessionIDFromInput(){
+        EditText editText = findViewById(R.id.inputProvisioningSessionID);
         return editText.getText().toString();
     }
 
-    public void utility_setTextToPassword(String s){
+    public void utility_setTextToSharedSecret(String s){
         TextView tv = findViewById(R.id.provisionPasswordText);
         tv.setText(s);
     }
 
-    public void utility_clearTextToPassword(){
+    public void utility_clearTextToSharedScret(){
         TextView tv = findViewById(R.id.provisionPasswordText);
         tv.setText("");
     }
@@ -75,10 +75,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void getUpdate(View view){
 
+        // TODO: Support the proper pin implementation
+        if (utility_fetchSessionIDFromInput() != "") {
 
-        if (utility_fetchPinFromInput() != "") {
-
-            Call call = apiService.getDistortSession(utility_fetchPinFromInput());
+            Call call = apiService.getDistortSession(utility_fetchSessionIDFromInput());
 
             call.enqueue(new Callback() {
                 @Override
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                     if (response.body() != null) {
                         Log.d("API", "Response acquired: ");
                         tempProvisionText = ((DistortSessionModel) response.body()).broadcastText;
-                        utility_setTextToPassword(tempProvisionText);
+                        utility_setTextToSharedSecret(tempProvisionText);
                     }
 
 
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         ClipData clip = ClipData.newPlainText("provision", tempProvisionText);
         clipboard.setPrimaryClip(clip);
         Toast.makeText(this,"Added provision text to clipboard: " + tempProvisionText,Toast.LENGTH_SHORT);
-        utility_clearTextToPassword();
+        utility_clearTextToSharedScret();
 
         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
 
